@@ -1,0 +1,6 @@
+__pycache__
+*.swp
+
+Backup/
+TGMediaDownloader.session
+settings.py
