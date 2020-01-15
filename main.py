@@ -19,7 +19,11 @@ class TGMediaDownloader:
     def __download(self, target_username, limit, filter_f):
         """Start download process"""
         with self.client:
-            target = self.client.get_entity(target_username)
+            try:
+                target = self.client.get_entity(target_username)
+            except ValueError:
+                print('"{0}" not found!'.format(target_username))
+                return
 
             # Create some directories
             if not os.path.isdir("Backup"):
@@ -69,7 +73,7 @@ class TGMediaDownloader:
                 for i in range(len(result.messages)):
                     media = result.messages[i]
                     self.client.download_media(media, "Backup/" + target_username) 
-                    print("Downloading {0}%".format(((offset+i)/msg_count)*100))
+                    print("Downloading {0:.2f}%".format(((offset+i)/msg_count)*100))
 
                 offset = offset + i
 
