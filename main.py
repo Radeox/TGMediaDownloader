@@ -1,3 +1,6 @@
+"""
+Telegram media downloader
+"""
 import os
 
 from telethon.sync import TelegramClient
@@ -12,25 +15,33 @@ class TGMediaDownloader:
         """Class constructor"""
         self.client = TelegramClient('TGMediaDownloader', api_id, api_hash)
 
-    def download_pictures(self, target_username, limit=None):
-        """Call the download function using photos filter"""
-        self.__download(target_username, limit, InputMessagesFilterPhotos())
+    def select_target(self):
+        targets = {}
 
-    def __download(self, target_username, limit, filter_f):
+        with self.client:
+            for index, dialog in enumerate(self.client.iter_dialogs()):
+                targets[index] = dialog
+                print("{0}] {1}".format(index, dialog.title))
+
+            x = int(input("Select a chat:"))
+
+            if x in targets.keys():
+                self.download_pictures(targets[x])
+
+
+    def download_pictures(self, target, limit=None):
+        """Call the download function using photos filter"""
+        self.__download(target, limit, InputMessagesFilterPhotos())
+
+    def __download(self, target, limit, filter_f):
         """Start download process"""
         with self.client:
-            try:
-                target = self.client.get_entity(target_username)
-            except ValueError:
-                print('"{0}" not found!'.format(target_username))
-                return
-
             # Create some directories
             if not os.path.isdir("Backup"):
                 os.mkdir("Backup")
-                os.mkdir("Backup/" + target_username)
-            elif not os.path.isdir("Backup/" + target_username):
-                os.mkdir("Backup/" + target_username)
+                os.mkdir("Backup/" + str(target.title))
+            elif not os.path.isdir("Backup/" + str(target.title)):
+                os.mkdir("Backup/" + str(target.title))
 
             if not limit:
                 # Get message count for the chat
@@ -57,7 +68,7 @@ class TGMediaDownloader:
             # Get messages (max 100 for each request)
             while offset < (msg_count - 1):
                 result = self.client(SearchRequest(
-                    peer=target_username,
+                    peer=target,
                     q='',
                     filter=filter_f,
                     min_date=None,
@@ -72,7 +83,7 @@ class TGMediaDownloader:
 
                 for i in range(len(result.messages)):
                     media = result.messages[i]
-                    self.client.download_media(media, "Backup/" + target_username) 
+                    self.client.download_media(media, "Backup/" + str(target.title))
                     print("Downloading {0:.2f}%".format(((offset+i)/msg_count)*100))
 
                 offset = offset + i
@@ -82,6 +93,4 @@ class TGMediaDownloader:
 
 if __name__ == "__main__":
     downloader = TGMediaDownloader(API_ID, API_HASH)
-
-    username = input("Username: ")
-    downloader.download_pictures(username)
+    downloader.select_target()
