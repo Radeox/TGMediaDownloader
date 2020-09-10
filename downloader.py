@@ -5,7 +5,7 @@ import os
 
 from telethon.sync import TelegramClient
 from telethon.tl.functions.messages import SearchRequest
-from telethon.tl.types import InputMessagesFilterPhotos
+from telethon.tl.types import InputMessagesFilterPhotos, InputMessagesFilterVideo
 
 from settings import API_ID, API_HASH
 
@@ -19,19 +19,25 @@ class TGMediaDownloader:
         targets = {}
 
         with self.client:
+            print("Select a chat:\n==================\n")
             for index, dialog in enumerate(self.client.iter_dialogs()):
                 targets[index] = dialog
-                print("{0}] {1}".format(index, dialog.title))
+                print(f"{index}] {dialog.title}")
 
-            x = int(input("Select a chat:"))
+            x = int(input("Select a chat: "))
 
             if x in targets.keys():
-                self.download_pictures(targets[x])
-
+                return targets[x]
+            else:
+                return 0
 
     def download_pictures(self, target, limit=None):
         """Call the download function using photos filter"""
         self.__download(target, limit, InputMessagesFilterPhotos())
+
+    def download_videos(self, target, limit=None):
+        """Call the download function using photos filter"""
+        self.__download(target, limit, InputMessagesFilterVideo())
 
     def __download(self, target, limit, filter_f):
         """Start download process"""
@@ -93,4 +99,18 @@ class TGMediaDownloader:
 
 if __name__ == "__main__":
     downloader = TGMediaDownloader(API_ID, API_HASH)
-    downloader.select_target()
+    chat = downloader.select_target()
+
+    print("Which media you want to download?")
+    print("0] All")
+    print("1] Photos")
+    print("2] Videos")
+    media_type = int(input("Choice: "))
+
+    if media_type == 0:
+        downloader.download_pictures(chat)
+        downloader.download_videos(chat)
+    elif media_type == 1:
+        downloader.download_pictures(chat)
+    elif media_type == 2:
+        downloader.download_videos(chat)
